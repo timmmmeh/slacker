@@ -1,5 +1,9 @@
 import cherrypy
 import uuid
+import sys
+lib_path = '..'
+sys.path.append(lib_path)
+import slacker_config
 
 class AuthService():
     exposed = True
@@ -41,7 +45,7 @@ class AuthService():
             return {'valid': True }
         else:
             # return error
-            return {'valid': False, 'message': 'Not in database' }
+            return {'valid': False, 'message': 'Not in database'}
 
 
     # Checks if the user is in the user DB
@@ -56,20 +60,20 @@ class AuthService():
     def check_current_session(self):
         key = cherrypy.request.json
         #check if the current session is in use
-        if key in self.sessions:
-            return True # Check with message writers about response format
+        if key in self.sessions: # Check if functions
+            return {'valid': True} # Check with message writers about response format
         else:
-            return False
+            return {'valid': False}
 
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     conf = {
-        '/': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.sessions.on': True,
-            'tools.response_headers.on': True,
-            'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-        }
-    }
+        '/' : {
+	    'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+	    'tools.response_headers.on': True,
+	    'tools.response_headers.headers': [('Content-Type', 'application/json')],
+	    }
+	  }
+    cherrypy.config.update({'server.socket_port' : slacker_config.urls.port['auth']})
     cherrypy.quickstart(AuthService(), '/', conf)
