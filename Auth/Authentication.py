@@ -1,9 +1,10 @@
 import cherrypy
+import json
 import uuid
 import sys
 lib_path = '..'
 sys.path.append(lib_path)
-import slacker_config
+from slacker_config import urls
 
 class AuthService():
     exposed = True
@@ -18,8 +19,11 @@ class AuthService():
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    def remove_session(self, username):
+    def remove_session_json(self):
         username = cherrypy.request.json
+        return remove_session_json(username)
+
+    def remove_session(self, username):
         #delete session from list
         if username in self.sessions:
             self.sessions.remove(self.sessions.index(username))
@@ -30,11 +34,13 @@ class AuthService():
     # Takes request from login
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    def validator(self):
+    def validator_json(self):
         request_data = cherrypy.request.json
         username = request_data['username']
         password = request_data['password']
+        return validator_json(username, password)
 
+    def validator(self, username, password):
         #takes username and password
         #sends it to the db
         self.is_present = self.check_user_db(username, password)
@@ -45,7 +51,7 @@ class AuthService():
             return {'valid': True }
         else:
             # return error
-            return {'valid': False, 'message': 'Not in database'}
+            return {'valid': False, 'message': 'Not in database' }
 
 
     # Checks if the user is in the user DB
@@ -57,23 +63,27 @@ class AuthService():
     # Checks if the user has a current session running, returns true or false
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
-    def check_current_session(self):
+    def POST_json(self):
         key = cherrypy.request.json
+        return POST_json(key)
+
+    def POST(self, key):
         #check if the current session is in use
-        if key in self.sessions: # Check if functions
-            return {'valid': True} # Check with message writers about response format
+        if key['session_key'] in self.sessions:
+            return {'user_id': 'steve'} # Check with message writers about response format
         else:
-            return {'valid': False}
+            return {'test': 'json'}
 
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     conf = {
-        '/' : {
-	    'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-	    'tools.response_headers.on': True,
-	    'tools.response_headers.headers': [('Content-Type', 'application/json')],
-	    }
-	  }
-    cherrypy.config.update({'server.socket_port' : slacker_config.urls.port['auth']})
+        '/': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.sessions.on': True,
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+        }
+    }
+    cherrypy.config.update({'server.socket_port': urls.port['auth']})
     cherrypy.quickstart(AuthService(), '/', conf)
