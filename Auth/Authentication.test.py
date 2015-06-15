@@ -2,8 +2,13 @@ import uittest
 import Authentication
 
 class TestAuth(unittest.TestCase):
+
     def setUp(self):
-        self.sessions = {username:"email@somewhere.co.nz"}
+
+        self.sessions = Authentication.AuthService()
+        self.sessions.add_session("Daniel")
+
+
 
     def test_add_session(self):
         pass
